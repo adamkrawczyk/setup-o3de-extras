@@ -3,7 +3,6 @@ import {wait} from './wait'
 
 async function run(): Promise<void> {
   try {
-    console.log('Running test action')
     const ms: string = core.getInput('milliseconds')
     core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
 
