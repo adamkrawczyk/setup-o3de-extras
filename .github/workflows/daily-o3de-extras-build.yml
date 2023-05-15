@@ -6,6 +6,7 @@ on:
 #       - main
   schedule:
     - cron: '0 2 * * *' # Runs every day at 2 am
+  workflow_dispatch: # Run manually
 
 jobs:
   build-and-publish:
