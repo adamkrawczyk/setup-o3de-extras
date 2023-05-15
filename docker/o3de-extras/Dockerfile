@@ -2,7 +2,7 @@
 
 FROM ros:humble-ros-core-jammy
 
-ENV O3DE_VERSION=stabilization/2305
+ENV O3DE_VERSION=main
 ENV O3DE_EXTRAS_VERSION=stabilization/2305
 ENV PROJECT_NAME=WarehouseTest
 
