@@ -1,30 +1,20 @@
-# Dockerfile from https://gist.github.com/michalpelka/a571f914bf5c9822935f2654e45811ec
-
 FROM ros:humble-ros-core-jammy
 
-ENV O3DE_VERSION=main
+ENV O3DE_LINK=https://o3debinaries.org/main/Latest/Linux/o3de_2305_0.deb
 ENV O3DE_EXTRAS_VERSION=stabilization/2305
 ENV PROJECT_NAME=WarehouseTest
-
 ENV WORKDIR=/data/workspace
-WORKDIR $WORKDIR
-
-ARG DEBIAN_FRONTEND=noninteractive
-
-# Setup time zone and locale data (necessary for SSL and HTTPS packages)
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get -y \
-    install \
-    tzdata \
-    locales \
-    keyboard-configuration && rm -rf /var/lib/apt/lists/*
-
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && dpkg-reconfigure --frontend=noninteractive locales && update-locale LANG=en_US.UTF-8
-
+ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8
 
-# Install common tools
-# deps in https://github.com/o3de/o3de/blob/development/scripts/build/build_node/Platform/Linux/package-list.ubuntu-jammy.txt
-RUN apt-get update && apt-get install -y \
+WORKDIR $WORKDIR
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils \
+    tzdata \
+    locales \
+    keyboard-configuration \
     bc \
     bind9-utils \
     binutils \
@@ -64,10 +54,16 @@ RUN apt-get update && apt-get install -y \
     unzip \
     vim \
     wget \
-    xz-utils && rm -rf /var/lib/apt/lists/*
+    xz-utils \
+    libffi7 \
+    clang-12 \
+    mesa-common-dev \
+    snapd
+    # && \
+    # rm -rf /var/lib/apt/lists/*
 
-# Gem + ROS pacakges
-RUN apt-get update && apt-get install -y \
+# Install Gem + ROS packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-ackermann-msgs \
     ros-humble-control-toolbox \
     ros-humble-gazebo-msgs \
@@ -76,19 +72,21 @@ RUN apt-get update && apt-get install -y \
     ros-humble-rviz2 \
     ros-humble-tf2-ros \
     ros-humble-urdfdom \
-    ros-humble-vision-msgs &&    rm -rf /var/lib/apt/lists/*
+    ros-humble-vision-msgs
 
 ## Symlink clang version to non-versioned clang and set cc to clang
 RUN update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && \
     update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
 
 # Install o3de
-RUN git clone https://github.com/o3de/o3de.git && \
-    cd o3de && \
-    git checkout ${O3DE_VERSION} && \
-    git lfs install && \
-    git lfs pull && \
-    python/get_python.sh
+RUN curl -o o3de.deb -O ${O3DE_LINK} 
+RUN chown -Rv _apt:root /var/cache/apt/archives/partial/ && \
+    chmod -Rv 700 /var/cache/apt/archives/partial/
+    
+# Exit 0 to ignore error code 100 at the end of the install
+RUN apt install -y ./o3de.deb; exit 0
+# Clean manually
+RUN mv /var/lib/dpkg/info/o3de.* /tmp 
 
 # Install o3de-extras
 RUN git clone https://github.com/RobotecAI/o3de-extras.git && \
@@ -97,14 +95,18 @@ RUN git clone https://github.com/RobotecAI/o3de-extras.git && \
     git lfs install && \
     git lfs pull
 
-# regiester engine and Gems from o3de-extras
-RUN ./o3de/scripts/o3de.sh register --this-engine && \
-    ./o3de/scripts/o3de.sh register --gem-path ./o3de-extras/Gems/ROS2 && \
-    ./o3de/scripts/o3de.sh register --gem-path ./o3de-extras/Gems/RosRobotSample && \
-    ./o3de/scripts/o3de.sh register --gem-path ./o3de-extras/Gems/WarehouseSample
+RUN echo "deb http://security.ubuntu.com/ubuntu focal-security main" | tee /etc/apt/sources.list.d/focal-security.list && \
+    apt-get update && \
+    apt-get install libssl1.1
+
+# Register engine and Gems
+RUN /opt/O3DE/23.05.0/scripts/o3de.sh register --this-engine && \
+    /opt/O3DE/23.05.0/scripts/o3de.sh register --gem-path ./o3de-extras/Gems/ROS2 && \
+    /opt/O3DE/23.05.0/scripts/o3de.sh register --gem-path ./o3de-extras/Gems/RosRobotSample && \
+    /opt/O3DE/23.05.0/scripts/o3de.sh register --gem-path ./o3de-extras/Gems/WarehouseSample
 
 # create in project from template in o3de-extras
-RUN ./o3de/scripts/o3de.sh create-project \
+RUN /opt/O3DE/23.05.0/scripts/o3de.sh create-project \
     --project-path ${WORKDIR}/${PROJECT_NAME} \
     --template-path ./o3de-extras/Templates/Ros2ProjectTemplate/ -f
 
@@ -114,25 +116,7 @@ RUN . /opt/ros/humble/setup.sh && \
     cmake -B build/linux -S . -G "Ninja Multi-Config" -DLY_STRIP_DEBUG_SYMBOLS=ON
 
 RUN . /opt/ros/humble/setup.sh && \
-    cmake --build build/linux --config profile --target ${PROJECT_NAME} Editor AssetProcessor
-
-# This final step takes long since they Assets will be downloading
-RUN . /opt/ros/humble/setup.sh && \
-    cmake --build build/linux --config profile --target ${PROJECT_NAME}.Assets
-
-# Installing some ros2 for navigation
-RUN apt-get update && apt-get install -y \
-    python3-colcon-common-extensions \
-    ros-humble-cyclonedds \
-    ros-humble-rmw-cyclonedds-cpp \
-    ros-humble-slam-toolbox \
-    ros-humble-navigation2 \
-    ros-humble-nav2-bringup \
-    ros-humble-pointcloud-to-laserscan \
-    ros-humble-teleop-twist-keyboard \
-    ros-humble-ackermann-msgs \
-    ros-humble-topic-tools && \
-    rm -rf /var/lib/apt/lists/*
+    cmake --build build/linux --config profile --target ${PROJECT_NAME}.GameLauncher Editor
 
 RUN pip install python-statemachine
 
