@@ -1,9 +1,6 @@
 name: Docker Build and Publish
 
 on:
-#   push:  # Run only on schedule
-#     branches:
-#       - main
   schedule:
     - cron: '0 2 * * *' # Runs every day at 2 am
   workflow_dispatch: # Run manually
@@ -24,6 +21,6 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
-        file: ./docker/o3de-extras/Dockerfile
+        file: ./docker/o3de-extras-daily/Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ci-o3de-extras:latest
