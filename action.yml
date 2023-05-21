@@ -1,11 +1,13 @@
 name: 'Setup o3de-extras'
 description: 'Custom action to setup o3de-extras'
 author: 'Robotec.AI'
+
 inputs:
-  milliseconds: # change this
+  script-path:
+    description: 'Path to the script with all tests defined by the user'
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    default: '.github/workflows/script.sh'
+
 runs:
   using: 'node16'
   main: 'dist/index.js'
