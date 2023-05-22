@@ -40,63 +40,41 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
-const wait_1 = __nccwpck_require__(817);
+const child_process_1 = __nccwpck_require__(81);
+const fs_1 = __nccwpck_require__(147);
+function runContainerScript(imageName, scriptToExecute) {
+    // Write the script to a temporary file
+    const tempFilePath = '/tmp/script.sh';
+    (0, fs_1.writeFileSync)(tempFilePath, scriptToExecute);
+    // Create a temporary container from the image and execute the script
+    const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} ${imageName} sh ${tempFilePath}`;
+    const output = (0, child_process_1.execSync)(command).toString();
+    return output;
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // Download docker image
-            const dockerImage = core.getInput('khasreto/o3de-extras-daily_dev');
-            core.debug(`Downloading ${dockerImage} ...`); // 
-            core.debug(new Date().toTimeString());
-            yield (0, wait_1.wait)(parseInt(dockerImage, 10));
-            core.debug(new Date().toTimeString());
-            // Run docker image with custom script script.sh
-            const script = core.getInput('script.sh');
-            core.debug(`Running ${script} ...`); //
-            core.debug(new Date().toTimeString());
-            yield (0, wait_1.wait)(parseInt(script, 10));
-            core.debug(new Date().toTimeString());
-            // Set output
-            core.setOutput('time', new Date().toTimeString());
+            const container = 'khasreto/o3de-extras-daily_dev'; //core.getInput('container-name');
+            const scriptToExecute = core.getInput('script-path');
+            const output = runContainerScript(container, scriptToExecute);
+            // Perform assertions on the output as needed
+            if (output.includes('Expected output')) {
+                core.info('Docker test passed!');
+            }
+            else {
+                core.error('Docker test failed!');
+                core.setFailed('Docker test failed!');
+            }
         }
         catch (error) {
-            if (error instanceof Error)
+            if (error instanceof Error) {
+                core.error(error.message);
                 core.setFailed(error.message);
+            }
         }
     });
 }
 run();
-
-
-/***/ }),
-
-/***/ 817:
-/***/ (function(__unused_webpack_module, exports) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.wait = void 0;
-function wait(milliseconds) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => {
-            if (isNaN(milliseconds)) {
-                throw new Error('milliseconds not a number');
-            }
-            setTimeout(() => resolve('done!'), milliseconds);
-        });
-    });
-}
-exports.wait = wait;
 
 
 /***/ }),
@@ -2793,6 +2771,14 @@ exports["default"] = _default;
 
 "use strict";
 module.exports = require("assert");
+
+/***/ }),
+
+/***/ 81:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("child_process");
 
 /***/ }),
 
