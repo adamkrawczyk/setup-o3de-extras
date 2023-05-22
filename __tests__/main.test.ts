@@ -18,7 +18,7 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
 
 test('Docker Test', () => {
   const container = process.env['INPUT_KHASRETO/O3DE-EXTRAS-DAILY_DEV'] = 'khasreto/o3de-extras-daily_dev';
-  const scriptPath = process.env['script-to-execute'] || '.github/workflows/script.sh';
+  const scriptPath = process.env['script-path'] || '.github/workflows/script.sh';
   // debug print the script path 
   console.log(`scriptPath: ${scriptPath}`);
   const scriptToExecute = readFileSync(scriptPath, 'utf-8');
