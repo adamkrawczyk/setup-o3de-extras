@@ -44,4 +44,4 @@ jobs:
       - name: Run Docker Test
         run: npm run docker-test
         env:
-          script-path: .github/workflows/script.sh
+          script-path: test/test-script.sh

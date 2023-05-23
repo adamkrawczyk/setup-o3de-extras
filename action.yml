@@ -6,7 +6,7 @@ inputs:
   script-path:
     description: 'Path to the script with all tests defined by the user'
     required: true
-    default: '.github/workflows/script.sh'
+    default: 'test/test-script.sh'
 
 runs:
   using: 'node16'
