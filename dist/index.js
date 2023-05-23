@@ -46,6 +46,13 @@ function runContainerScript(imageName, scriptToExecute) {
     // Write the script to a temporary file
     const tempFilePath = '/tmp/script.sh';
     (0, fs_1.writeFileSync)(tempFilePath, scriptToExecute);
+    // debug print diredctory contents
+    const ls = (0, child_process_1.execSync)('ls -la').toString();
+    core.error(ls);
+    const tree = (0, child_process_1.execSync)('tree').toString();
+    core.error(tree);
+    const pwd = (0, child_process_1.execSync)('pwd').toString();
+    core.error(pwd);
     // Create a temporary container from the image and execute the script
     const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} ${imageName} sh ${tempFilePath}`;
     const output = (0, child_process_1.execSync)(command).toString();
