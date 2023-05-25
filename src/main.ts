@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'fs';
 function runContainerScript(imageName: string, scriptToExecute: string): string {
   // Write the script to a temporary file
   const tempFilePath = '/tmp/script.sh';
-  writeFileSync(tempFilePath, scriptToExecute);
+  writeFileSync(tempFilePath, scriptToExecute.toString());
 
   // Execute the script inside the container
   const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} ${imageName} sh ${tempFilePath}`;
@@ -35,6 +35,7 @@ async function run(): Promise<void> {
       git pull download
       git checkout/${branchName}
     `;
+    
     const scriptToExecute = readFileSync(scriptPath, 'utf8');
 
     // Replace placeholders in the setup script template with actual values
