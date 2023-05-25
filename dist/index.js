@@ -66,11 +66,11 @@ function run() {
       cd o3de-extras
       
       # Set download_stream to the current URL
-      git remote add upstream ${o3deExtrasUrl}
+      git remote add download ${o3deExtrasUrl}
       
       # Pull the branch from which this CI is run
-      git pull upstream ${branchName}
-      git checkout ${branchName}
+      git pull download
+      git checkout/${branchName}
     `;
             const scriptToExecute = (0, fs_1.readFileSync)(scriptPath, 'utf8');
             // Replace placeholders in the setup script template with actual values

@@ -32,8 +32,8 @@ async function run(): Promise<void> {
       git remote add download ${o3deExtrasUrl}
       
       # Pull the branch from which this CI is run
-      git pull download ${branchName}
-      git checkout ${branchName}
+      git pull download
+      git checkout/${branchName}
     `;
     const scriptToExecute = readFileSync(scriptPath, 'utf8');
 
