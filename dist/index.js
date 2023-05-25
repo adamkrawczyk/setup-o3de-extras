@@ -46,7 +46,7 @@ function runContainerScript(imageName, scriptToExecute) {
     // Write the script to a temporary file
     const tempFilePath = '/tmp/script.sh';
     (0, fs_1.writeFileSync)(tempFilePath, scriptToExecute);
-    // Create a temporary container from the image and execute the script
+    // Execute the script inside the container
     const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} ${imageName} sh ${tempFilePath}`;
     const output = (0, child_process_1.execSync)(command).toString();
     return output;
@@ -54,11 +54,37 @@ function runContainerScript(imageName, scriptToExecute) {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const container = 'khasreto/o3de-extras-daily_dev'; //core.getInput('container-name');
-            const scriptToExecute = core.getInput('script-path');
-            const output = runContainerScript(container, scriptToExecute);
+            const container = 'khasreto/o3de-extras-daily_dev';
+            const o3deExtrasUrl = core.getInput('o3de-extras-url');
+            const branchName = core.getInput('branch-name');
+            const scriptPath = core.getInput('script-path');
+            const setupScriptTemplate = `
+      #!/bin/bash
+      # Script to modify the container environment/setup
+      
+      # Change directory to o3de-extras
+      cd o3de-extras
+      
+      # Set download_stream to the current URL
+      git remote add upstream ${o3deExtrasUrl}
+      
+      # Pull the branch from which this CI is run
+      git pull upstream ${branchName}
+      git checkout ${branchName}
+    `;
+            const scriptToExecute = (0, fs_1.readFileSync)(scriptPath, 'utf8');
+            // Replace placeholders in the setup script template with actual values
+            const setupScript = setupScriptTemplate.replace('<current URL>', o3deExtrasUrl).replace('<branch-name>', branchName);
+            // Run the setup script to modify the container environment/setup
+            const setupOutput = runContainerScript(container, setupScript);
+            core.info('Setup script output:');
+            core.info(setupOutput);
+            // Run the main script on the modified container
+            const mainOutput = runContainerScript(container, scriptToExecute);
+            core.info('Main script output:');
+            core.info(mainOutput);
             // Perform assertions on the output as needed
-            if (output.includes('Expected output')) {
+            if (mainOutput.includes('Expected output')) {
                 core.info('Docker test passed!');
             }
             else {
