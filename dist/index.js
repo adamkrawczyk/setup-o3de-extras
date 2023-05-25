@@ -45,7 +45,7 @@ const fs_1 = __nccwpck_require__(147);
 function runContainerScript(imageName, scriptToExecute) {
     // Write the script to a temporary file
     const tempFilePath = '/tmp/script.sh';
-    (0, fs_1.writeFileSync)(tempFilePath, scriptToExecute);
+    (0, fs_1.writeFileSync)(tempFilePath, scriptToExecute.toString());
     // Execute the script inside the container
     const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} ${imageName} sh ${tempFilePath}`;
     const output = (0, child_process_1.execSync)(command).toString();
