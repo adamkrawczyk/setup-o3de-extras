@@ -77,8 +77,8 @@ function run() {
       git remote add download ${o3deExtrasUrl}
       
       # Pull the branch from which this CI is run
-      git pull download
-      git checkout/${branchName}
+      git pull download ${branchName}
+      git checkout download/${branchName}
     `;
             const scriptToExecute = yield new Promise((resolve, reject) => {
                 (0, fs_1.readFile)(scriptPath, 'utf8', (err, data) => {
