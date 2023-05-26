@@ -55,7 +55,7 @@ function runContainerScript(imageName, scriptToExecute) {
     }
     (0, fs_2.writeFileSync)(tempFilePath, scriptToExecute.toString());
     // Execute the script inside the container
-    const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} ${imageName} sh ${tempFilePath}`;
+    const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} -v $(pwd)/o3de-extras:/o3de-extras ${imageName} sh ${tempFilePath}`;
     const output = (0, child_process_1.execSync)(command).toString();
     return output;
 }
@@ -70,17 +70,8 @@ function run() {
             const setupScriptTemplate = `
       #!/bin/bash
       # Script to modify the container environment/setup
-      
-      # Change directory to o3de-extras
-      cd o3de-extras
-      
-      # Set download_stream to the current URL
-      git remote add download ${o3deExtrasUrl}
-      
-      # Pull the branch from which this CI is run
-      git fetch --all
-      git checkout ${currentO3deSha}
-    `;
+      rm -rf /o3de-extras
+      `;
             const scriptToExecute = yield new Promise((resolve, reject) => {
                 (0, fs_1.readFile)(scriptPath, 'utf8', (err, data) => {
                     if (err) {
