@@ -29,6 +29,8 @@ async function run(): Promise<void> {
     const branchName = core.getInput('branch-name');
     const scriptPath = core.getInput('script-path');
 
+    const currentO3deSha = execSync('git rev-parse HEAD').toString();
+
     const setupScriptTemplate = `
       #!/bin/bash
       # Script to modify the container environment/setup
@@ -41,8 +43,7 @@ async function run(): Promise<void> {
       
       # Pull the branch from which this CI is run
       git fetch --all
-      git pull download ${branchName}
-      git checkout download/${branchName}
+      git checkout ${currentO3deSha}
     `;
     
     const scriptToExecute = await new Promise<string>((resolve, reject) => {
@@ -55,8 +56,9 @@ async function run(): Promise<void> {
       });
     });
 
+
     // Replace placeholders in the setup script template with actual values
-    const setupScript = setupScriptTemplate.replace('<current URL>', o3deExtrasUrl).replace('<branch-name>', branchName);
+    const setupScript = setupScriptTemplate.replace('<current URL>', o3deExtrasUrl).replace('<version>', currentO3deSha);
 
     // Run the setup script to modify the container environment/setup
     const setupOutput = runContainerScript(container, setupScript);

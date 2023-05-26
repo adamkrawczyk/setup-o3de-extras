@@ -66,6 +66,7 @@ function run() {
             const o3deExtrasUrl = core.getInput('o3de-extras-url');
             const branchName = core.getInput('branch-name');
             const scriptPath = core.getInput('script-path');
+            const currentO3deSha = (0, child_process_1.execSync)('git rev-parse HEAD').toString();
             const setupScriptTemplate = `
       #!/bin/bash
       # Script to modify the container environment/setup
@@ -78,8 +79,7 @@ function run() {
       
       # Pull the branch from which this CI is run
       git fetch --all
-      git pull download ${branchName}
-      git checkout download/${branchName}
+      git checkout ${currentO3deSha}
     `;
             const scriptToExecute = yield new Promise((resolve, reject) => {
                 (0, fs_1.readFile)(scriptPath, 'utf8', (err, data) => {
@@ -92,7 +92,7 @@ function run() {
                 });
             });
             // Replace placeholders in the setup script template with actual values
-            const setupScript = setupScriptTemplate.replace('<current URL>', o3deExtrasUrl).replace('<branch-name>', branchName);
+            const setupScript = setupScriptTemplate.replace('<current URL>', o3deExtrasUrl).replace('<version>', currentO3deSha);
             // Run the setup script to modify the container environment/setup
             const setupOutput = runContainerScript(container, setupScript);
             core.info('Setup script output:');
