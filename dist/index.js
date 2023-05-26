@@ -42,10 +42,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const child_process_1 = __nccwpck_require__(81);
 const fs_1 = __nccwpck_require__(147);
+const fs_2 = __nccwpck_require__(147);
 function runContainerScript(imageName, scriptToExecute) {
     // Write the script to a temporary file
     const tempFilePath = '/tmp/script.sh';
-    (0, fs_1.writeFileSync)(tempFilePath, scriptToExecute.toString());
+    (0, fs_2.writeFileSync)(tempFilePath, scriptToExecute.toString());
     // Execute the script inside the container
     const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} ${imageName} sh ${tempFilePath}`;
     const output = (0, child_process_1.execSync)(command).toString();
@@ -72,7 +73,16 @@ function run() {
       git pull download
       git checkout/${branchName}
     `;
-            const scriptToExecute = (0, fs_1.readFileSync)(scriptPath, 'utf8');
+            const scriptToExecute = yield new Promise((resolve, reject) => {
+                (0, fs_1.readFile)(scriptPath, 'utf8', (err, data) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(data);
+                    }
+                });
+            });
             // Replace placeholders in the setup script template with actual values
             const setupScript = setupScriptTemplate.replace('<current URL>', o3deExtrasUrl).replace('<branch-name>', branchName);
             // Run the setup script to modify the container environment/setup
