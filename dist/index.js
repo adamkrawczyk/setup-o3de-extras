@@ -45,7 +45,14 @@ const fs_1 = __nccwpck_require__(147);
 const fs_2 = __nccwpck_require__(147);
 function runContainerScript(imageName, scriptToExecute) {
     // Write the script to a temporary file
-    const tempFilePath = '/tmp/script.sh';
+    const tempFilePath = '/tmp/o3de-extras-test-script.sh';
+    // try to remove the file if it exists
+    try {
+        (0, child_process_1.execSync)(`rm ${tempFilePath}`);
+    }
+    catch (error) {
+        // do nothing
+    }
     (0, fs_2.writeFileSync)(tempFilePath, scriptToExecute.toString());
     // Execute the script inside the container
     const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} ${imageName} sh ${tempFilePath}`;

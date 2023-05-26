@@ -5,7 +5,14 @@ import { readFileSync, writeFileSync } from 'fs';
 
 function runContainerScript(imageName: string, scriptToExecute: string): string {
   // Write the script to a temporary file
-  const tempFilePath = '/tmp/script.sh';
+  const tempFilePath = '/tmp/o3de-extras-test-script.sh';
+  // try to remove the file if it exists
+  try {
+    execSync(`rm ${tempFilePath}`);
+  } catch (error) {
+    // do nothing
+  }
+
   writeFileSync(tempFilePath, scriptToExecute.toString());
 
   // Execute the script inside the container
