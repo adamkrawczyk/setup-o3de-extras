@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import { execSync } from 'child_process';
+import { readFile } from 'fs';
 import { readFileSync, writeFileSync } from 'fs';
 
 function runContainerScript(imageName: string, scriptToExecute: string): string {
@@ -36,7 +37,15 @@ async function run(): Promise<void> {
       git checkout/${branchName}
     `;
     
-    const scriptToExecute = readFileSync(scriptPath, 'utf8');
+    const scriptToExecute = await new Promise<string>((resolve, reject) => {
+      readFile(scriptPath, 'utf8', (err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      });
+    });
 
     // Replace placeholders in the setup script template with actual values
     const setupScript = setupScriptTemplate.replace('<current URL>', o3deExtrasUrl).replace('<branch-name>', branchName);
