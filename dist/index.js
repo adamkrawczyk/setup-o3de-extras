@@ -69,16 +69,22 @@ function run() {
             const setupScriptTemplate = `
       #!/bin/bash
       # Script to modify the container environment/setup
+
+      # Remove the current o3de-extras directory
+      rm -rf o3de-extras
+
+      # Clone o3de-extras
+      git clone ${o3deExtrasUrl}
       
       # Change directory to o3de-extras
       cd o3de-extras
       
       # Set download_stream to the current URL
-      git remote add download ${o3deExtrasUrl}
+      # git remote add download ${o3deExtrasUrl}
       
       # Pull the branch from which this CI is run
-      git pull download ${branchName}
-      git checkout download/${branchName}
+      # git pull download ${branchName}
+      git checkout ${branchName}
     `;
             const scriptToExecute = yield new Promise((resolve, reject) => {
                 (0, fs_1.readFile)(scriptPath, 'utf8', (err, data) => {
