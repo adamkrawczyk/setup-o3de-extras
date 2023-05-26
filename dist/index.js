@@ -55,7 +55,7 @@ function runContainerScript(imageName, scriptToExecute) {
     }
     (0, fs_2.writeFileSync)(tempFilePath, scriptToExecute.toString());
     // Execute the script inside the container
-    const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} -v $(pwd)/o3de-extras:/o3de-extras ${imageName} sh ${tempFilePath}`;
+    const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} sh ${tempFilePath}`;
     const output = (0, child_process_1.execSync)(command).toString();
     return output;
 }
@@ -66,12 +66,6 @@ function run() {
             const o3deExtrasUrl = core.getInput('o3de-extras-url');
             const branchName = core.getInput('branch-name');
             const scriptPath = core.getInput('script-path');
-            const currentO3deSha = (0, child_process_1.execSync)('git rev-parse HEAD').toString();
-            const setupScriptTemplate = `
-      #!/bin/bash
-      # Script to modify the container environment/setup
-      rm -rf /o3de-extras
-      `;
             const scriptToExecute = yield new Promise((resolve, reject) => {
                 (0, fs_1.readFile)(scriptPath, 'utf8', (err, data) => {
                     if (err) {
@@ -82,12 +76,6 @@ function run() {
                     }
                 });
             });
-            // Replace placeholders in the setup script template with actual values
-            const setupScript = setupScriptTemplate.replace('<current URL>', o3deExtrasUrl).replace('<version>', currentO3deSha);
-            // Run the setup script to modify the container environment/setup
-            const setupOutput = runContainerScript(container, setupScript);
-            core.info('Setup script output:');
-            core.info(setupOutput);
             // Run the main script on the modified container
             const mainOutput = runContainerScript(container, scriptToExecute);
             core.info('Main script output:');
