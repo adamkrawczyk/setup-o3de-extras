@@ -40,8 +40,8 @@ async function run(): Promise<void> {
       git remote add download ${o3deExtrasUrl}
       
       # Pull the branch from which this CI is run
-      git pull download
-      git checkout/${branchName}
+      git pull download ${branchName}
+      git checkout download/${branchName}
     `;
     
     const scriptToExecute = await new Promise<string>((resolve, reject) => {
