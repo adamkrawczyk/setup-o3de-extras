@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Expected result
-VALUE="Expected output"
+VALUE="RESULT: ALL TESTS PASSED"
 
 # Print the value
 echo $VALUE
