@@ -121,5 +121,3 @@ RUN pip install python-statemachine
 WORKDIR $WORKDIR
 
 VOLUME $WORKDIR/o3de-extras
-
-ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
