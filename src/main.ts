@@ -7,7 +7,7 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   const tempFilePath = '/tmp/o3de-extras-test-script.sh';
   // try to remove the file if it exists
   try {
-    execSync(`rm ${tempFilePath}`);
+    execSync(`rm -rf ${tempFilePath}`);
   } catch (error) {
     // do nothing
   }

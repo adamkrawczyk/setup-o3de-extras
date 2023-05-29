@@ -42,18 +42,17 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const child_process_1 = __nccwpck_require__(81);
 const fs_1 = __nccwpck_require__(147);
-const fs_2 = __nccwpck_require__(147);
 function runContainerScript(imageName, scriptToExecute) {
     // Write the script to a temporary file
     const tempFilePath = '/tmp/o3de-extras-test-script.sh';
     // try to remove the file if it exists
     try {
-        (0, child_process_1.execSync)(`rm ${tempFilePath}`);
+        (0, child_process_1.execSync)(`rm -rf ${tempFilePath}`);
     }
     catch (error) {
         // do nothing
     }
-    (0, fs_2.writeFileSync)(tempFilePath, scriptToExecute.toString());
+    (0, fs_1.writeFileSync)(tempFilePath, scriptToExecute.toString());
     // Execute the script inside the container
     const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} sh ${tempFilePath}`;
     const output = (0, child_process_1.execSync)(command).toString();
@@ -62,9 +61,8 @@ function runContainerScript(imageName, scriptToExecute) {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const container = 'khasreto/o3de-extras-daily_dev';
-            const o3deExtrasUrl = core.getInput('o3de-extras-url');
-            const branchName = core.getInput('branch-name');
+            // const container = 'khasreto/o3de-extras-daily_dev';
+            const container = core.getInput('container');
             const scriptPath = core.getInput('script-path');
             const scriptToExecute = yield new Promise((resolve, reject) => {
                 (0, fs_1.readFile)(scriptPath, 'utf8', (err, data) => {
@@ -81,7 +79,7 @@ function run() {
             core.info('Main script output:');
             core.info(mainOutput);
             // Perform assertions on the output as needed
-            if (mainOutput.includes('Expected output')) {
+            if (mainOutput.includes('RESULT: ALL TESTS PASSED')) {
                 core.info('Docker test passed!');
             }
             else {
