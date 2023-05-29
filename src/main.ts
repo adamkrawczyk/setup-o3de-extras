@@ -24,9 +24,8 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
 
 async function run(): Promise<void> {
   try {
-    const container = 'khasreto/o3de-extras-daily_dev';
-    const o3deExtrasUrl = core.getInput('o3de-extras-url');
-    const branchName = core.getInput('branch-name');
+    // const container = 'khasreto/o3de-extras-daily_dev';
+    const container = core.getInput('container');
     const scriptPath = core.getInput('script-path');
     
     const scriptToExecute = await new Promise<string>((resolve, reject) => {

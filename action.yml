@@ -7,15 +7,12 @@ inputs:
     description: 'Path to the script with all tests defined by the user'
     required: true
     default: 'test/test-script.sh'
-  o3de-extras-url:
-    description: 'URL to the o3de-extras repository'
+  container:
+    description: 'Container to use for the tests'
     required: false
-    default: 'https://github.com/o3de/o3de-extras.git'
-  branch-name:
-    description: 'Branch name to checkout'
-    required: false
-    default: 'development'
+    default: 'khasreto/o3de-extras-daily_dev'
 
 runs:
   using: 'node16'
   main: 'dist/index.js'
+
