@@ -47,13 +47,12 @@ function runContainerScript(imageName, scriptToExecute) {
     const tempFilePath = '/tmp/ci_testing/';
     const tempFileName = 'script.sh';
     const tempFileFullPath = `${tempFilePath}${tempFileName}`;
-    // try to remove the file if it exists
-    try {
-        (0, child_process_1.execSync)(`rm -rf ${tempFilePath}`);
-    }
-    catch (error) {
-        // do nothing
-    }
+    // try to remove the file asynchronously
+    (0, fs_1.rmdir)(tempFilePath, { recursive: true }, (err) => {
+        if (err) {
+            throw err;
+        }
+    });
     // Write file to the temp file and check if it is written correctly
     try {
         (0, fs_1.writeFileSync)(tempFileFullPath, scriptToExecute.toString());
@@ -67,6 +66,8 @@ function runContainerScript(imageName, scriptToExecute) {
     const repoName = (0, child_process_1.execSync)(`pwd`).toString();
     // debug print the repo name
     console.log(`repoName: ${repoName}`);
+    const folderName = repoName.split('/').pop();
+    console.log(`folderName: ${folderName}`);
     // declare the command
     let command = '';
     if (repoName.includes('o3de-extras')) {
@@ -74,10 +75,8 @@ function runContainerScript(imageName, scriptToExecute) {
         command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
     }
     else {
-        const folderName = repoName.split('/').pop();
-        command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
+        command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
     }
-    // const command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
     const output = (0, child_process_1.execSync)(command).toString();
     return output;
 }

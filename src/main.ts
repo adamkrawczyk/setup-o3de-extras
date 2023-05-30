@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { execSync } from 'child_process';
-import { readFile, writeFileSync } from 'fs';
+import { readFile, writeFileSync, rmdir } from 'fs';
 
 function runContainerScript(imageName: string, scriptToExecute: string): string {
   // Write the script to a temporary file
@@ -8,12 +8,12 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   const tempFileName = 'script.sh';
   const tempFileFullPath = `${tempFilePath}${tempFileName}`;
 
-  // try to remove the file if it exists
-  try {
-    execSync(`rm -rf ${tempFilePath}`);
-  } catch (error) {
-    // do nothing
-  }
+  // try to remove the file asynchronously
+  rmdir(tempFilePath, { recursive: true }, (err) => {
+    if (err) {
+      throw err;
+    }
+  });
 
   // Write file to the temp file and check if it is written correctly
   try {
@@ -30,7 +30,9 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   const repoName = execSync(`pwd`).toString();
   // debug print the repo name
   console.log(`repoName: ${repoName}`);
-
+  const folderName = repoName.split('/').pop();
+  console.log(`folderName: ${folderName}`);
+  
 
   // declare the command
   let command = '';
@@ -40,12 +42,9 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
     command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
   }
   else {
-    const folderName = repoName.split('/').pop();
-    command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
+    command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
   }
 
-
-  // const command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
   const output = execSync(command).toString();
 
   return output;
