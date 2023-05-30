@@ -64,7 +64,7 @@ function runContainerScript(imageName, scriptToExecute) {
     }
     // Execute the script inside the container
     // Check if the repo is o3de-extras
-    const repoName = (0, child_process_1.execSync)(`pwd/`).toString();
+    const repoName = (0, child_process_1.execSync)(`pwd`).toString();
     // debug print the repo name
     console.log(`repoName: ${repoName}`);
     // declare the command
