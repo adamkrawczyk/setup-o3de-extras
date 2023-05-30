@@ -27,7 +27,7 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
 
   // Check if the repo is o3de-extras
 
-  const repoName = execSync(`pwd/`).toString();
+  const repoName = execSync(`pwd`).toString();
   // debug print the repo name
   console.log(`repoName: ${repoName}`);
 
@@ -45,10 +45,10 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   }
 
 
-    // const command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
-    const output = execSync(command).toString();
+  // const command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
+  const output = execSync(command).toString();
 
-    return output;
+  return output;
 }
 
 async function run(): Promise<void> {
