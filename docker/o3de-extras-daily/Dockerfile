@@ -121,3 +121,8 @@ RUN pip install python-statemachine
 WORKDIR $WORKDIR
 
 VOLUME $WORKDIR/o3de-extras
+
+# Extra volume for the user to mount their own repository
+RUN mkdir -p $WORKDIR/repository
+
+VOLUME $WORKDIR/repository

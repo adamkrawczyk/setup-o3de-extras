@@ -44,7 +44,9 @@ const child_process_1 = __nccwpck_require__(81);
 const fs_1 = __nccwpck_require__(147);
 function runContainerScript(imageName, scriptToExecute) {
     // Write the script to a temporary file
-    const tempFilePath = '/tmp/o3de-extras-test-script.sh';
+    const tempFilePath = '/tmp/ci_testing/';
+    const tempFileName = 'script.sh';
+    const tempFileFullPath = `${tempFilePath}${tempFileName}`;
     // try to remove the file if it exists
     try {
         (0, child_process_1.execSync)(`rm -rf ${tempFilePath}`);
@@ -52,16 +54,36 @@ function runContainerScript(imageName, scriptToExecute) {
     catch (error) {
         // do nothing
     }
-    (0, fs_1.writeFileSync)(tempFilePath, scriptToExecute.toString());
+    // Write file to the temp file and check if it is written correctly
+    try {
+        (0, fs_1.writeFileSync)(tempFileFullPath, scriptToExecute.toString());
+    }
+    catch (error) {
+        core.error(`Failed to write to file: ${tempFileFullPath}`);
+        core.setFailed(`Failed to write to file: ${tempFileFullPath}`);
+    }
     // Execute the script inside the container
-    const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFilePath}`;
+    // Check if the repo is o3de-extras
+    const repoName = (0, child_process_1.execSync)(`pwd/`).toString();
+    // debug print the repo name
+    console.log(`repoName: ${repoName}`);
+    // declare the command
+    let command = '';
+    if (repoName.includes('o3de-extras')) {
+        // if it is o3de-extras, then we need to mount the workspace
+        command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
+    }
+    else {
+        const folderName = repoName.split('/').pop();
+        command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
+    }
+    // const command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
     const output = (0, child_process_1.execSync)(command).toString();
     return output;
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // const container = 'khasreto/o3de-extras-daily_dev';
             const container = core.getInput('container');
             const scriptPath = core.getInput('script-path');
             const scriptToExecute = yield new Promise((resolve, reject) => {
