@@ -15,7 +15,7 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   writeFileSync(tempFilePath, scriptToExecute.toString());
 
   // Execute the script inside the container
-  const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} sh ${tempFilePath}`;
+  const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFilePath}`;
   const output = execSync(command).toString();
 
   return output;
