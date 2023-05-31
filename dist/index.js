@@ -70,7 +70,6 @@ function checkIfFile(filePath) {
     });
 }
 function runContainerScript(imageName, scriptToExecute) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         // Write the script to a temporary file
         const tempFilePath = '/tmp/ci_testing/';
@@ -106,40 +105,32 @@ function runContainerScript(imageName, scriptToExecute) {
             });
             // write the file to the temp file
             yield writeToFile(tempFileFullPath, scriptToExecute.toString());
-            // rest of the code...
+            // check if the created file is a file
+            const isFile = yield checkIfFile(tempFileFullPath);
+            if (!isFile) {
+                console.error(`Created file is not a file: ${tempFileFullPath}`);
+                throw new Error(`Created file is not a file: ${tempFileFullPath}`);
+            }
+            // Determine the working directory
+            const repoPath = (0, child_process_1.execSync)('pwd').toString().trim();
+            console.log(`Working directory: ${repoPath}`);
+            // Determine the command based on the repo name
+            let command = '';
+            if (repoPath.endsWith('o3de-extras')) {
+                console.log('o3de-extras detected');
+                command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v ${repoPath}:/data/workspace/o3de-extras --workdir /data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
+            }
+            else {
+                console.log(`Running on a general-purpose repo: ${repoPath}`);
+                command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v ${repoPath}:/data/workspace/repository --workdir /data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
+            }
+            // Execute the Docker command
+            const output = (0, child_process_1.execSync)(command).toString();
+            return output;
         }
         catch (error) {
             console.error(error);
             throw error;
-        }
-        // Execute the script inside the container
-        const repoName = (0, child_process_1.execSync)(`pwd`).toString();
-        // debug print the repo name
-        console.log(`repoName: ${repoName}`);
-        const folderName = (_a = repoName.split('/').pop()) === null || _a === void 0 ? void 0 : _a.replace('\n', '');
-        console.log(`folderName: ${folderName}`);
-        // declare the command
-        let command = '';
-        if (folderName === 'o3de-extras') {
-            console.log('o3de-extras detected');
-            // if it is o3de-extras, then we need to mount the workspace
-            command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
-        }
-        else {
-            console.log('running on a general purpose repo: ${folderName}');
-            command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
-        }
-        // debug print the command
-        console.log(`command: ${command}`);
-        // check if the created file is a file
-        const isFile = yield checkIfFile(tempFileFullPath);
-        if (!isFile) {
-            console.error(`Created file is not a file: ${tempFileFullPath}`);
-            throw new Error(`Created file is not a file: ${tempFileFullPath}`);
-        }
-        else {
-            const output = (0, child_process_1.execSync)(command).toString();
-            return output;
         }
     });
 }
