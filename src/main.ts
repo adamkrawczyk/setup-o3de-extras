@@ -1,3 +1,4 @@
+import {wait} from './wait'
 import * as core from '@actions/core';
 import { execSync } from 'child_process';
 import { readFile, writeFile, rm, mkdir, stat } from 'fs';
@@ -50,9 +51,9 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
     });
   });
 
-  // Execute the script inside the container
+  wait(1000); // 1 second delay
 
-  // Check if the repo is o3de-extras
+  // Execute the script inside the container
 
   const repoName = execSync(`pwd`).toString();
   // debug print the repo name
