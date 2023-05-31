@@ -82,6 +82,8 @@ function runContainerScript(imageName, scriptToExecute) {
     else {
         command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
     }
+    // debug print the command
+    console.log(`command: ${command}`);
     const output = (0, child_process_1.execSync)(command).toString();
     return output;
 }
