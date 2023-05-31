@@ -50,8 +50,7 @@ function runContainerScript(imageName, scriptToExecute) {
     // try to remove the file asynchronously
     (0, fs_1.rm)(tempFilePath, { recursive: true }, (err) => {
         if (err) {
-            core.setFailed(`Failed to remove directory: ${tempFilePath}`);
-            throw err;
+            ; // do nothing
         }
     });
     (0, fs_1.mkdir)(tempFilePath, { recursive: true }, (err) => {
