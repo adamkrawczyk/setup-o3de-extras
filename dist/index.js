@@ -39,76 +39,107 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const wait_1 = __nccwpck_require__(817);
 const core = __importStar(__nccwpck_require__(186));
 const child_process_1 = __nccwpck_require__(81);
 const fs_1 = __nccwpck_require__(147);
-function runContainerScript(imageName, scriptToExecute) {
-    var _a;
-    // Write the script to a temporary file
-    const tempFilePath = '/tmp/ci_testing/';
-    const tempFileName = 'script.sh';
-    const tempFileFullPath = tempFilePath + tempFileName;
-    // try to remove the file asynchronously
-    (0, fs_1.rm)(tempFilePath, { recursive: true }, (err) => {
-        if (err) {
-            // do nothing
-        }
-        // create the directory
-        (0, fs_1.mkdir)(tempFilePath, { recursive: true }, (err) => {
+function writeToFile(filePath, data) {
+    return new Promise((resolve, reject) => {
+        (0, fs_1.writeFile)(filePath, data, (err) => {
             if (err) {
-                console.error(`Failed to create directory: ${tempFilePath}`);
-                throw err;
+                console.error(`Failed to write to file: ${filePath}`);
+                reject(err);
             }
-            // wait for 1 second before writing to the file
-            setTimeout(() => {
-                // write the file to the temp file
-                (0, fs_1.writeFile)(tempFileFullPath, scriptToExecute.toString(), (err) => {
-                    if (err) {
-                        console.error(`Failed to write to file: ${tempFileFullPath}`);
-                        throw err;
-                    }
-                    console.log(`File written successfully: ${tempFileFullPath}`);
-                    // check if the created file is a file
-                    (0, fs_1.stat)(tempFileFullPath, (err, stats) => {
-                        if (err) {
-                            console.error(`Failed to retrieve file information: ${tempFileFullPath}`);
-                            throw err;
-                        }
-                        if (stats.isFile()) {
-                            console.log(`File verification successful: ${tempFileFullPath}`);
-                        }
-                        else {
-                            console.error(`Created file is not a file: ${tempFileFullPath}`);
-                            throw new Error(`Created file is not a file: ${tempFileFullPath}`);
-                        }
-                    });
-                });
-            }, 1000); // 1 second delay
+            else {
+                console.log(`File written successfully: ${filePath}`);
+                resolve();
+            }
         });
     });
-    (0, wait_1.wait)(1000); // 1 second delay
-    // Execute the script inside the container
-    const repoName = (0, child_process_1.execSync)(`pwd`).toString();
-    // debug print the repo name
-    console.log(`repoName: ${repoName}`);
-    const folderName = (_a = repoName.split('/').pop()) === null || _a === void 0 ? void 0 : _a.replace('\n', '');
-    console.log(`folderName: ${folderName}`);
-    // declare the command
-    let command = '';
-    if (folderName === 'o3de-extras') {
-        console.log('o3de-extras detected');
-        // if it is o3de-extras, then we need to mount the workspace
-        command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
-    }
-    else {
-        console.log('running on a general purpose repo: ${folderName}');
-        command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
-    }
-    // debug print the command
-    console.log(`command: ${command}`);
-    const output = (0, child_process_1.execSync)(command).toString();
-    return output;
+}
+function checkIfFile(filePath) {
+    return new Promise((resolve, reject) => {
+        (0, fs_1.stat)(filePath, (err, stats) => {
+            if (err) {
+                console.error(`Failed to retrieve file information: ${filePath}`);
+                reject(err);
+            }
+            else {
+                resolve(stats.isFile());
+            }
+        });
+    });
+}
+function runContainerScript(imageName, scriptToExecute) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        // Write the script to a temporary file
+        const tempFilePath = '/tmp/ci_testing/';
+        const tempFileName = 'script.sh';
+        const tempFileFullPath = tempFilePath + tempFileName;
+        try {
+            // try to remove the file asynchronously
+            yield new Promise((resolve, reject) => {
+                (0, fs_1.rm)(tempFilePath, { recursive: true }, (err) => {
+                    if (err) {
+                        // do nothing
+                    }
+                    resolve();
+                });
+            });
+            // create the directory
+            yield new Promise((resolve, reject) => {
+                (0, fs_1.mkdir)(tempFilePath, { recursive: true }, (err) => {
+                    if (err) {
+                        console.error(`Failed to create directory: ${tempFilePath}`);
+                        reject(err);
+                    }
+                    else {
+                        resolve();
+                    }
+                });
+            });
+            // wait for 1 second before writing to the file
+            yield new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve();
+                }, 1000); // 1 second delay
+            });
+            // write the file to the temp file
+            yield writeToFile(tempFileFullPath, scriptToExecute.toString());
+            // check if the created file is a file
+            const isFile = yield checkIfFile(tempFileFullPath);
+            if (!isFile) {
+                console.error(`Created file is not a file: ${tempFileFullPath}`);
+                throw new Error(`Created file is not a file: ${tempFileFullPath}`);
+            }
+            // rest of the code...
+        }
+        catch (error) {
+            console.error(error);
+            throw error;
+        }
+        // Execute the script inside the container
+        const repoName = (0, child_process_1.execSync)(`pwd`).toString();
+        // debug print the repo name
+        console.log(`repoName: ${repoName}`);
+        const folderName = (_a = repoName.split('/').pop()) === null || _a === void 0 ? void 0 : _a.replace('\n', '');
+        console.log(`folderName: ${folderName}`);
+        // declare the command
+        let command = '';
+        if (folderName === 'o3de-extras') {
+            console.log('o3de-extras detected');
+            // if it is o3de-extras, then we need to mount the workspace
+            command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
+        }
+        else {
+            console.log('running on a general purpose repo: ${folderName}');
+            command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
+        }
+        // debug print the command
+        console.log(`command: ${command}`);
+        const output = (0, child_process_1.execSync)(command).toString();
+        return output;
+    });
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -126,7 +157,7 @@ function run() {
                 });
             });
             // Run the main script on the modified container
-            const mainOutput = runContainerScript(container, scriptToExecute);
+            const mainOutput = yield runContainerScript(container, scriptToExecute);
             core.info('Main script output:');
             core.info(mainOutput);
             // Perform assertions on the output as needed
@@ -147,37 +178,6 @@ function run() {
     });
 }
 run();
-
-
-/***/ }),
-
-/***/ 817:
-/***/ (function(__unused_webpack_module, exports) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.wait = void 0;
-function wait(milliseconds) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => {
-            if (isNaN(milliseconds)) {
-                throw new Error('milliseconds not a number');
-            }
-            setTimeout(() => resolve('done!'), milliseconds);
-        });
-    });
-}
-exports.wait = wait;
 
 
 /***/ }),

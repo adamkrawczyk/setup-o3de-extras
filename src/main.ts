@@ -3,55 +3,85 @@ import * as core from '@actions/core';
 import { execSync } from 'child_process';
 import { readFile, writeFile, rm, mkdir, stat } from 'fs';
 
-function runContainerScript(imageName: string, scriptToExecute: string): string {
+function writeToFile(filePath: string, data: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    writeFile(filePath, data, (err) => {
+      if (err) {
+        console.error(`Failed to write to file: ${filePath}`);
+        reject(err);
+      } else {
+        console.log(`File written successfully: ${filePath}`);
+        resolve();
+      }
+    });
+  });
+}
+
+function checkIfFile(filePath: string): Promise<boolean> {
+  return new Promise<boolean>((resolve, reject) => {
+    stat(filePath, (err, stats) => {
+      if (err) {
+        console.error(`Failed to retrieve file information: ${filePath}`);
+        reject(err);
+      } else {
+        resolve(stats.isFile());
+      }
+    });
+  });
+}
+
+async function runContainerScript(imageName: string, scriptToExecute: string): Promise<string> {
   // Write the script to a temporary file
   const tempFilePath = '/tmp/ci_testing/';
   const tempFileName = 'script.sh';
   const tempFileFullPath = tempFilePath + tempFileName;
 
-  // try to remove the file asynchronously
-  rm(tempFilePath, { recursive: true }, (err) => {
-    if (err) {
-      // do nothing
-    }
+  try {
+    // try to remove the file asynchronously
+    await new Promise<void>((resolve, reject) => {
+      rm(tempFilePath, { recursive: true }, (err) => {
+        if (err) {
+          // do nothing
+        }
+        resolve();
+      });
+    });
 
     // create the directory
-    mkdir(tempFilePath, { recursive: true }, (err) => {
-      if (err) {
-        console.error(`Failed to create directory: ${tempFilePath}`);
-        throw err;
-      }
+    await new Promise<void>((resolve, reject) => {
+      mkdir(tempFilePath, { recursive: true }, (err) => {
+        if (err) {
+          console.error(`Failed to create directory: ${tempFilePath}`);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
 
-      // wait for 1 second before writing to the file
+    // wait for 1 second before writing to the file
+    await new Promise<void>((resolve) => {
       setTimeout(() => {
-        // write the file to the temp file
-        writeFile(tempFileFullPath, scriptToExecute.toString(), (err) => {
-          if (err) {
-            console.error(`Failed to write to file: ${tempFileFullPath}`);
-            throw err;
-          }
-          console.log(`File written successfully: ${tempFileFullPath}`);
-
-          // check if the created file is a file
-          stat(tempFileFullPath, (err, stats) => {
-            if (err) {
-              console.error(`Failed to retrieve file information: ${tempFileFullPath}`);
-              throw err;
-            }
-
-            if (stats.isFile()) {
-              console.log(`File verification successful: ${tempFileFullPath}`);
-            } else {
-              console.error(`Created file is not a file: ${tempFileFullPath}`);
-              throw new Error(`Created file is not a file: ${tempFileFullPath}`);
-            }
-          });
-        });
+        resolve();
       }, 1000); // 1 second delay
     });
-  });
 
-  wait(1000); // 1 second delay
+    // write the file to the temp file
+    await writeToFile(tempFileFullPath, scriptToExecute.toString());
+
+    // check if the created file is a file
+    const isFile = await checkIfFile(tempFileFullPath);
+    if (!isFile) {
+      console.error(`Created file is not a file: ${tempFileFullPath}`);
+      throw new Error(`Created file is not a file: ${tempFileFullPath}`);
+    }
+
+    // rest of the code...
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+
 
   // Execute the script inside the container
 
@@ -98,7 +128,7 @@ async function run(): Promise<void> {
     });
 
     // Run the main script on the modified container
-    const mainOutput = runContainerScript(container, scriptToExecute);
+    const mainOutput = await runContainerScript(container, scriptToExecute);
     core.info('Main script output:');
     core.info(mainOutput);
 
