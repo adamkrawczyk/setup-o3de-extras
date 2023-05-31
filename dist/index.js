@@ -46,21 +46,27 @@ function runContainerScript(imageName, scriptToExecute) {
     // Write the script to a temporary file
     const tempFilePath = '/tmp/ci_testing/';
     const tempFileName = 'script.sh';
-    const tempFileFullPath = `${tempFilePath}${tempFileName}`;
+    const tempFileFullPath = tempFilePath + tempFileName;
     // try to remove the file asynchronously
-    (0, fs_1.rmdir)(tempFilePath, { recursive: true }, (err) => {
+    (0, fs_1.rm)(tempFilePath, { recursive: true }, (err) => {
         if (err) {
+            core.setFailed(`Failed to remove directory: ${tempFilePath}`);
+            throw err;
+        }
+    });
+    (0, fs_1.mkdir)(tempFilePath, { recursive: true }, (err) => {
+        if (err) {
+            core.setFailed(`Failed to create directory: ${tempFilePath}`);
             throw err;
         }
     });
     // Write file to the temp file and check if it is written correctly
-    try {
-        (0, fs_1.writeFileSync)(tempFileFullPath, scriptToExecute.toString());
-    }
-    catch (error) {
-        core.error(`Failed to write to file: ${tempFileFullPath}`);
-        core.setFailed(`Failed to write to file: ${tempFileFullPath}`);
-    }
+    (0, fs_1.writeFile)(tempFileFullPath, scriptToExecute.toString(), (err) => {
+        if (err) {
+            core.error(`Failed to write to file: ${tempFileFullPath}`);
+            core.setFailed(`Failed to write to file: ${tempFileFullPath}`);
+        }
+    });
     // Execute the script inside the container
     // Check if the repo is o3de-extras
     const repoName = (0, child_process_1.execSync)(`pwd`).toString();

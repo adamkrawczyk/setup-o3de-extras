@@ -1,15 +1,15 @@
 import * as core from '@actions/core';
 import { execSync } from 'child_process';
-import { readFile, writeFile, rmdir, mkdir } from 'fs';
+import { readFile, writeFile, rm, mkdir } from 'fs';
 
 function runContainerScript(imageName: string, scriptToExecute: string): string {
   // Write the script to a temporary file
   const tempFilePath = '/tmp/ci_testing/';
   const tempFileName = 'script.sh';
-  const tempFileFullPath = `${tempFilePath}${tempFileName}`;
+  const tempFileFullPath = tempFilePath + tempFileName;
 
   // try to remove the file asynchronously
-  rmdir(tempFilePath, { recursive: true }, (err) => {
+  rm(tempFilePath, { recursive: true }, (err) => {
     if (err) {
       core.setFailed(`Failed to remove directory: ${tempFilePath}`);
       throw err;
