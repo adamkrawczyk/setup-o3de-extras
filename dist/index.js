@@ -106,12 +106,6 @@ function runContainerScript(imageName, scriptToExecute) {
             });
             // write the file to the temp file
             yield writeToFile(tempFileFullPath, scriptToExecute.toString());
-            // check if the created file is a file
-            const isFile = yield checkIfFile(tempFileFullPath);
-            if (!isFile) {
-                console.error(`Created file is not a file: ${tempFileFullPath}`);
-                throw new Error(`Created file is not a file: ${tempFileFullPath}`);
-            }
             // rest of the code...
         }
         catch (error) {
@@ -137,8 +131,16 @@ function runContainerScript(imageName, scriptToExecute) {
         }
         // debug print the command
         console.log(`command: ${command}`);
-        const output = (0, child_process_1.execSync)(command).toString();
-        return output;
+        // check if the created file is a file
+        const isFile = yield checkIfFile(tempFileFullPath);
+        if (!isFile) {
+            console.error(`Created file is not a file: ${tempFileFullPath}`);
+            throw new Error(`Created file is not a file: ${tempFileFullPath}`);
+        }
+        else {
+            const output = (0, child_process_1.execSync)(command).toString();
+            return output;
+        }
     });
 }
 function run() {

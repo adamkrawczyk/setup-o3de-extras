@@ -69,19 +69,11 @@ async function runContainerScript(imageName: string, scriptToExecute: string): P
     // write the file to the temp file
     await writeToFile(tempFileFullPath, scriptToExecute.toString());
 
-    // check if the created file is a file
-    const isFile = await checkIfFile(tempFileFullPath);
-    if (!isFile) {
-      console.error(`Created file is not a file: ${tempFileFullPath}`);
-      throw new Error(`Created file is not a file: ${tempFileFullPath}`);
-    }
-
     // rest of the code...
   } catch (error) {
     console.error(error);
     throw error;
   }
-
 
   // Execute the script inside the container
 
@@ -107,9 +99,16 @@ async function runContainerScript(imageName: string, scriptToExecute: string): P
   // debug print the command
   console.log(`command: ${command}`);
 
+  // check if the created file is a file
+  const isFile = await checkIfFile(tempFileFullPath);
+  if (!isFile) {
+    console.error(`Created file is not a file: ${tempFileFullPath}`);
+    throw new Error(`Created file is not a file: ${tempFileFullPath}`);
+  }
+  else {
   const output = execSync(command).toString();
-
   return output;
+  }
 }
 
 async function run(): Promise<void> {
