@@ -43,17 +43,22 @@ const core = __importStar(__nccwpck_require__(186));
 const child_process_1 = __nccwpck_require__(81);
 const fs_1 = __nccwpck_require__(147);
 function writeToFile(filePath, data) {
+    // return new Promise<void>((resolve, reject) => {
+    //   writeFile(filePath, data, (err) => {
+    //     if (err) {
+    //       console.error(`Failed to write to file: ${filePath}`);
+    //       reject(err);
+    //     } else {
+    //       console.log(`File written successfully: ${filePath}`);
+    //       resolve();
+    //     }
+    //   });
+    // });
+    // write with linux command
     return new Promise((resolve, reject) => {
-        (0, fs_1.writeFile)(filePath, data, (err) => {
-            if (err) {
-                console.error(`Failed to write to file: ${filePath}`);
-                reject(err);
-            }
-            else {
-                console.log(`File written successfully: ${filePath}`);
-                resolve();
-            }
-        });
+        const command = `echo "${data}" > ${filePath}`;
+        const output = (0, child_process_1.execSync)(command).toString();
+        resolve();
     });
 }
 function checkIfFile(filePath) {
@@ -74,7 +79,7 @@ function runContainerScript(imageName, scriptToExecute) {
         // Write the script to a temporary file
         const os = __nccwpck_require__(37);
         const path = __nccwpck_require__(17);
-        const tempFilePath = os.tmpdir();
+        const tempFilePath = path.join(os.tmpdir(), 'ci-test');
         const tempFileName = 'script.sh';
         const tempFileFullPath = path.join(tempFilePath, tempFileName);
         try {

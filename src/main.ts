@@ -3,16 +3,24 @@ import { execSync, spawnSync } from 'child_process';
 import { readFile, writeFile, rm, mkdir, stat } from 'fs';
 
 function writeToFile(filePath: string, data: string): Promise<void> {
+  // return new Promise<void>((resolve, reject) => {
+  //   writeFile(filePath, data, (err) => {
+  //     if (err) {
+  //       console.error(`Failed to write to file: ${filePath}`);
+  //       reject(err);
+  //     } else {
+  //       console.log(`File written successfully: ${filePath}`);
+  //       resolve();
+  //     }
+  //   });
+  // });
+
+  // write with linux command
+
   return new Promise<void>((resolve, reject) => {
-    writeFile(filePath, data, (err) => {
-      if (err) {
-        console.error(`Failed to write to file: ${filePath}`);
-        reject(err);
-      } else {
-        console.log(`File written successfully: ${filePath}`);
-        resolve();
-      }
-    });
+    const command = `echo "${data}" > ${filePath}`;
+    const output = execSync(command).toString();
+    resolve();
   });
 }
 
@@ -34,7 +42,7 @@ async function runContainerScript(imageName: string, scriptToExecute: string): P
   const os = require('os');
   const path = require('path');
 
-  const tempFilePath = os.tmpdir();
+  const tempFilePath = path.join(os.tmpdir(), 'ci-test');
   const tempFileName = 'script.sh';
   const tempFileFullPath = path.join(tempFilePath, tempFileName);
 
