@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { execSync } from 'child_process';
-import { readFile, writeFileSync, rmdir } from 'fs';
+import { readFile, writeFile, rmdir, mkdir } from 'fs';
 
 function runContainerScript(imageName: string, scriptToExecute: string): string {
   // Write the script to a temporary file
@@ -11,17 +11,25 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   // try to remove the file asynchronously
   rmdir(tempFilePath, { recursive: true }, (err) => {
     if (err) {
+      core.setFailed(`Failed to remove directory: ${tempFilePath}`);
+      throw err;
+    }
+  });
+
+  mkdir(tempFilePath, { recursive: true }, (err) => {
+    if (err) {
+      core.setFailed(`Failed to create directory: ${tempFilePath}`);
       throw err;
     }
   });
 
   // Write file to the temp file and check if it is written correctly
-  try {
-    writeFileSync(tempFileFullPath, scriptToExecute.toString());
-  } catch (error) {
-    core.error(`Failed to write to file: ${tempFileFullPath}`);
-    core.setFailed(`Failed to write to file: ${tempFileFullPath}`);
-  }
+  writeFile(tempFileFullPath, scriptToExecute.toString(), (err) => {
+    if (err) {
+      core.error(`Failed to write to file: ${tempFileFullPath}`);
+      core.setFailed(`Failed to write to file: ${tempFileFullPath}`);
+    }
+  });
 
   // Execute the script inside the container
 
