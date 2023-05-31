@@ -37,7 +37,7 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   // declare the command
   let command = '';
 
-  if (repoName.includes('o3de-extras')) {
+  if (folderName === 'o3de-extras'  ) {
     // if it is o3de-extras, then we need to mount the workspace
     command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
   }
