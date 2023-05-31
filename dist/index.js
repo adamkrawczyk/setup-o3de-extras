@@ -43,6 +43,7 @@ const core = __importStar(__nccwpck_require__(186));
 const child_process_1 = __nccwpck_require__(81);
 const fs_1 = __nccwpck_require__(147);
 function runContainerScript(imageName, scriptToExecute) {
+    var _a;
     // Write the script to a temporary file
     const tempFilePath = '/tmp/ci_testing/';
     const tempFileName = 'script.sh';
@@ -71,15 +72,17 @@ function runContainerScript(imageName, scriptToExecute) {
     const repoName = (0, child_process_1.execSync)(`pwd`).toString();
     // debug print the repo name
     console.log(`repoName: ${repoName}`);
-    const folderName = repoName.split('/').pop();
+    const folderName = (_a = repoName.split('/').pop()) === null || _a === void 0 ? void 0 : _a.replace('\n', '');
     console.log(`folderName: ${folderName}`);
     // declare the command
     let command = '';
-    if (folderName == 'o3de-extras') {
+    if (folderName === 'o3de-extras') {
+        console.log('o3de-extras detected');
         // if it is o3de-extras, then we need to mount the workspace
         command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
     }
     else {
+        console.log('running on a general purpose repo: ${folderName}');
         command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
     }
     // debug print the command

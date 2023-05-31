@@ -1,30 +1,90 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import {expect, test} from '@jest/globals'
+import * as core from '@actions/core';
 import { execSync } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFile, writeFile, rm, mkdir } from 'fs';
+import {expect, test} from '@jest/globals'
 
 function runContainerScript(imageName: string, scriptToExecute: string): string {
   // Write the script to a temporary file
-  const tempFilePath = '/tmp/script.sh';
-  writeFileSync(tempFilePath, scriptToExecute);
+  const tempFilePath = '/tmp/ci_testing/';
+  const tempFileName = 'script.sh';
+  const tempFileFullPath = tempFilePath + tempFileName;
 
-  // Create a temporary container from the image and execute the script
-  const command = `docker run --rm -v ${tempFilePath}:${tempFilePath} ${imageName} sh ${tempFilePath}`;
+  // try to remove the file asynchronously
+  rm(tempFilePath, { recursive: true }, (err) => {
+    if (err) {
+      ; // do nothing
+    }
+  });
+
+  mkdir(tempFilePath, { recursive: true }, (err) => {
+    if (err) {
+      core.setFailed(`Failed to create directory: ${tempFilePath}`);
+      throw err;
+    }
+  });
+
+  // Write file to the temp file and check if it is written correctly
+  writeFile(tempFileFullPath, scriptToExecute.toString(), (err) => {
+    if (err) {
+      core.error(`Failed to write to file: ${tempFileFullPath}`);
+      core.setFailed(`Failed to write to file: ${tempFileFullPath}`);
+    }
+  });
+
+  // Execute the script inside the container
+
+  // Check if the repo is o3de-extras
+
+  const repoName = execSync(`pwd`).toString();
+  // debug print the repo name
+  console.log(`repoName: ${repoName}`);
+  const folderName = repoName.split('/').pop()?.replace('\n', '');
+
+  console.log(`folderName: ${folderName}`);
+
+  // declare the command
+  let command = '';
+
+  if (folderName === 'o3de-extras') {
+    console.log('o3de-extras detected');
+    // if it is o3de-extras, then we need to mount the workspace
+    command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
+  }
+  else {
+    console.log(`running on a general purpose repo: ${folderName}`);
+    command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
+  }
+
+  // debug print the command
+  console.log(`command: ${command}`);
+
   const output = execSync(command).toString();
 
   return output;
 }
 
 test('Docker Test', () => {
-  const container = process.env['INPUT_KHASRETO/O3DE-EXTRAS-DAILY_DEV'] = 'khasreto/o3de-extras-daily_dev';
-  const scriptPath = process.env['script-path'] || 'test/test-script.sh';
-  // debug print the script path 
-  console.log(`scriptPath: ${scriptPath}`);
-  const scriptToExecute = readFileSync(scriptPath, 'utf-8');
+  let mainOutput = '';
+  try {
+    // const container = core.getInput('container');
+    // const scriptPath = core.getInput('script-path');
 
-  const output = runContainerScript(container, scriptToExecute);
+    const container = 'khasreto/o3de-extras-daily_dev:latest';
+    const scriptPath = 'test/test-script.sh';
 
-  // Perform assertions on the output as needed
-  expect(output).toContain('Expected output');
+    const scriptToExecute = execSync(`cat ${scriptPath}`).toString();
+
+    // Run the main script on the modified container
+    mainOutput = runContainerScript(container, scriptToExecute);
+    core.info('Main script output:');
+    core.info(mainOutput);
+
+    // Perform assertions on the output as needed
+  } catch (error) {
+    if (error instanceof Error) {
+      core.error(error.message);
+      core.setFailed(error.message);
+    }
+  }
+  expect(mainOutput).toContain('RESULT: ALL TESTS PASSED');
 });

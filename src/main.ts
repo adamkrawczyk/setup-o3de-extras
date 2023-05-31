@@ -37,17 +37,19 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   const repoName = execSync(`pwd`).toString();
   // debug print the repo name
   console.log(`repoName: ${repoName}`);
-  const folderName = repoName.split('/').pop();
+  const folderName = repoName.split('/').pop()?.replace('\n', '');
   console.log(`folderName: ${folderName}`);
 
   // declare the command
   let command = '';
 
-  if (folderName == 'o3de-extras') {
+  if (folderName === 'o3de-extras') {
+    console.log('o3de-extras detected');
     // if it is o3de-extras, then we need to mount the workspace
     command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
   }
   else {
+    console.log('running on a general purpose repo: ${folderName}');
     command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
   }
 
