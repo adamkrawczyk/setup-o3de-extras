@@ -12,23 +12,25 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   // try to remove the file asynchronously
   rm(tempFilePath, { recursive: true }, (err) => {
     if (err) {
-      ; // do nothing
+      // do nothing
     }
-  });
 
-  mkdir(tempFilePath, { recursive: true }, (err) => {
-    if (err) {
-      core.setFailed(`Failed to create directory: ${tempFilePath}`);
-      throw err;
-    }
-  });
+    // create the directory
+    mkdir(tempFilePath, { recursive: true }, (err) => {
+      if (err) {
+        console.error(`Failed to create directory: ${tempFilePath}`);
+        throw err;
+      }
 
-  // Write file to the temp file and check if it is written correctly
-  writeFile(tempFileFullPath, scriptToExecute.toString(), (err) => {
-    if (err) {
-      core.error(`Failed to write to file: ${tempFileFullPath}`);
-      core.setFailed(`Failed to write to file: ${tempFileFullPath}`);
-    }
+      // write the file to the temp file
+      writeFile(tempFileFullPath, scriptToExecute.toString(), (err) => {
+        if (err) {
+          console.error(`Failed to write to file: ${tempFileFullPath}`);
+          throw err;
+        }
+        console.log(`File written successfully: ${tempFileFullPath}`);
+      });
+    });
   });
 
   // Execute the script inside the container
