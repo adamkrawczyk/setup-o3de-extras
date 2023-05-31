@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { execSync } from 'child_process';
-import { readFile, writeFile, rm, mkdir } from 'fs';
+import { readFile, writeFile, rm, mkdir, stat } from 'fs';
 
 function runContainerScript(imageName: string, scriptToExecute: string): string {
   // Write the script to a temporary file
@@ -21,14 +21,32 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
         throw err;
       }
 
-      // write the file to the temp file
-      writeFile(tempFileFullPath, scriptToExecute.toString(), (err) => {
-        if (err) {
-          console.error(`Failed to write to file: ${tempFileFullPath}`);
-          throw err;
-        }
-        console.log(`File written successfully: ${tempFileFullPath}`);
-      });
+      // wait for 1 second before writing to the file
+      setTimeout(() => {
+        // write the file to the temp file
+        writeFile(tempFileFullPath, scriptToExecute.toString(), (err) => {
+          if (err) {
+            console.error(`Failed to write to file: ${tempFileFullPath}`);
+            throw err;
+          }
+          console.log(`File written successfully: ${tempFileFullPath}`);
+
+          // check if the created file is a file
+          stat(tempFileFullPath, (err, stats) => {
+            if (err) {
+              console.error(`Failed to retrieve file information: ${tempFileFullPath}`);
+              throw err;
+            }
+
+            if (stats.isFile()) {
+              console.log(`File verification successful: ${tempFileFullPath}`);
+            } else {
+              console.error(`Created file is not a file: ${tempFileFullPath}`);
+              throw new Error(`Created file is not a file: ${tempFileFullPath}`);
+            }
+          });
+        });
+      }, 1000); // 1 second delay
     });
   });
 

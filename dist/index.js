@@ -59,14 +59,31 @@ function runContainerScript(imageName, scriptToExecute) {
                 console.error(`Failed to create directory: ${tempFilePath}`);
                 throw err;
             }
-            // write the file to the temp file
-            (0, fs_1.writeFile)(tempFileFullPath, scriptToExecute.toString(), (err) => {
-                if (err) {
-                    console.error(`Failed to write to file: ${tempFileFullPath}`);
-                    throw err;
-                }
-                console.log(`File written successfully: ${tempFileFullPath}`);
-            });
+            // wait for 1 second before writing to the file
+            setTimeout(() => {
+                // write the file to the temp file
+                (0, fs_1.writeFile)(tempFileFullPath, scriptToExecute.toString(), (err) => {
+                    if (err) {
+                        console.error(`Failed to write to file: ${tempFileFullPath}`);
+                        throw err;
+                    }
+                    console.log(`File written successfully: ${tempFileFullPath}`);
+                    // check if the created file is a file
+                    (0, fs_1.stat)(tempFileFullPath, (err, stats) => {
+                        if (err) {
+                            console.error(`Failed to retrieve file information: ${tempFileFullPath}`);
+                            throw err;
+                        }
+                        if (stats.isFile()) {
+                            console.log(`File verification successful: ${tempFileFullPath}`);
+                        }
+                        else {
+                            console.error(`Created file is not a file: ${tempFileFullPath}`);
+                            throw new Error(`Created file is not a file: ${tempFileFullPath}`);
+                        }
+                    });
+                });
+            }, 1000); // 1 second delay
         });
     });
     // Execute the script inside the container
