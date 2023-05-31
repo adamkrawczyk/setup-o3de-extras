@@ -126,3 +126,5 @@ VOLUME $WORKDIR/o3de-extras
 RUN mkdir -p $WORKDIR/repository
 
 VOLUME $WORKDIR/repository
+
+ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
