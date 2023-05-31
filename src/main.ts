@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { execSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 import { readFile, writeFile, rm, mkdir, stat } from 'fs';
 
 function writeToFile(filePath: string, data: string): Promise<void> {
@@ -31,9 +31,12 @@ function checkIfFile(filePath: string): Promise<boolean> {
 
 async function runContainerScript(imageName: string, scriptToExecute: string): Promise<string> {
   // Write the script to a temporary file
-  const tempFilePath = '/tmp/ci_testing/';
+  const os = require('os');
+  const path = require('path');
+
+  const tempFilePath = os.tmpdir();
   const tempFileName = 'script.sh';
-  const tempFileFullPath = tempFilePath + tempFileName;
+  const tempFileFullPath = path.join(tempFilePath, tempFileName);
 
   try {
     // try to remove the file asynchronously
@@ -89,8 +92,15 @@ async function runContainerScript(imageName: string, scriptToExecute: string): P
       command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v ${repoPath}:/data/workspace/repository --workdir /data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
     }
 
-    // Execute the Docker command
-    const output = execSync(command).toString();
+    // Execute the Docker command using spawnSync
+    const result = spawnSync('sh', ['-c', command]);
+
+    if (result.error) {
+      console.error('Command execution failed:', result.error);
+      throw result.error;
+    }
+
+    const output = result.stdout.toString();
     return output;
   } catch (error) {
     console.error(error);

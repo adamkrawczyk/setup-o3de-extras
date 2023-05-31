@@ -72,9 +72,11 @@ function checkIfFile(filePath) {
 function runContainerScript(imageName, scriptToExecute) {
     return __awaiter(this, void 0, void 0, function* () {
         // Write the script to a temporary file
-        const tempFilePath = '/tmp/ci_testing/';
+        const os = __nccwpck_require__(37);
+        const path = __nccwpck_require__(17);
+        const tempFilePath = os.tmpdir();
         const tempFileName = 'script.sh';
-        const tempFileFullPath = tempFilePath + tempFileName;
+        const tempFileFullPath = path.join(tempFilePath, tempFileName);
         try {
             // try to remove the file asynchronously
             yield new Promise((resolve, reject) => {
@@ -124,8 +126,13 @@ function runContainerScript(imageName, scriptToExecute) {
                 console.log(`Running on a general-purpose repo: ${repoPath}`);
                 command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v ${repoPath}:/data/workspace/repository --workdir /data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
             }
-            // Execute the Docker command
-            const output = (0, child_process_1.execSync)(command).toString();
+            // Execute the Docker command using spawnSync
+            const result = (0, child_process_1.spawnSync)('sh', ['-c', command]);
+            if (result.error) {
+                console.error('Command execution failed:', result.error);
+                throw result.error;
+            }
+            const output = result.stdout.toString();
             return output;
         }
         catch (error) {
