@@ -15,15 +15,11 @@ export async function runContainerScript(imageName: string, scriptToExecute: str
   const containerScriptFullPath = path.join(containerScriptsPath, tempFileName);
 
   try {
-    // try to remove the file asynchronously
+
+    // remove using rimraf
+    const rimraf = require('rimraf');
     await new Promise<void>((resolve, reject) => {
-      rm(tempFilePath, { recursive: true }, (err) => {
-        if (err) {
-          // break the promise chain if there is an error
-          reject(err);
-        }
-        resolve();
-      });
+      rimraf(tempFilePath) 
     });
 
     // create the directory
