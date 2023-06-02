@@ -1,34 +1,11 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 109:
+/***/ 499:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -39,41 +16,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(186));
+exports.runContainerScript = void 0;
 const child_process_1 = __nccwpck_require__(81);
+const io_1 = __nccwpck_require__(915);
+const file_1 = __nccwpck_require__(14);
 const fs_1 = __nccwpck_require__(147);
-function writeToFile(filePath, data) {
-    // return new Promise<void>((resolve, reject) => {
-    //   writeFile(filePath, data, (err) => {
-    //     if (err) {
-    //       console.error(`Failed to write to file: ${filePath}`);
-    //       reject(err);
-    //     } else {
-    //       console.log(`File written successfully: ${filePath}`);
-    //       resolve();
-    //     }
-    //   });
-    // });
-    // write with linux command
-    return new Promise((resolve, reject) => {
-        const command = `echo "${data}" > ${filePath}`;
-        const output = (0, child_process_1.execSync)(command).toString();
-        resolve();
-    });
-}
-function checkIfFile(filePath) {
-    return new Promise((resolve, reject) => {
-        (0, fs_1.stat)(filePath, (err, stats) => {
-            if (err) {
-                console.error(`Failed to retrieve file information: ${filePath}`);
-                reject(err);
-            }
-            else {
-                resolve(stats.isFile());
-            }
-        });
-    });
-}
 function runContainerScript(imageName, scriptToExecute) {
     return __awaiter(this, void 0, void 0, function* () {
         // Write the script to a temporary file
@@ -113,9 +60,9 @@ function runContainerScript(imageName, scriptToExecute) {
                 }, 1000); // 1 second delay
             });
             // write the file to the temp file
-            yield writeToFile(tempFileFullPath, scriptToExecute.toString());
+            yield (0, io_1.writeToFile)(tempFileFullPath, scriptToExecute.toString());
             // check if the created file is a file
-            const isFile = yield checkIfFile(tempFileFullPath);
+            const isFile = yield (0, file_1.checkIfFile)(tempFileFullPath);
             if (!isFile) {
                 console.error(`Created file is not a file: ${tempFileFullPath}`);
                 throw new Error(`Created file is not a file: ${tempFileFullPath}`);
@@ -150,6 +97,107 @@ function runContainerScript(imageName, scriptToExecute) {
         }
     });
 }
+exports.runContainerScript = runContainerScript;
+
+
+/***/ }),
+
+/***/ 14:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.checkIfFile = void 0;
+const fs_1 = __nccwpck_require__(147);
+function checkIfFile(filePath) {
+    return new Promise((resolve, reject) => {
+        (0, fs_1.stat)(filePath, (err, stats) => {
+            if (err) {
+                console.error(`Failed to retrieve file information: ${filePath}`);
+                reject(err);
+            }
+            else {
+                resolve(stats.isFile());
+            }
+        });
+    });
+}
+exports.checkIfFile = checkIfFile;
+
+
+/***/ }),
+
+/***/ 915:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.writeToFile = void 0;
+const fs_1 = __nccwpck_require__(147);
+function writeToFile(filePath, data) {
+    return new Promise((resolve, reject) => {
+        (0, fs_1.writeFile)(filePath, data, (err) => {
+            if (err) {
+                console.error(`Failed to write to file: ${filePath}`);
+                reject(err);
+            }
+            else {
+                console.log(`File written successfully: ${filePath}`);
+                resolve();
+            }
+        });
+    });
+}
+exports.writeToFile = writeToFile;
+
+
+/***/ }),
+
+/***/ 109:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(186));
+const fs_1 = __nccwpck_require__(147);
+const container_1 = __nccwpck_require__(499);
+// import { checkIfFile } from './file';
+// import { writeToFile } from './io';
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -166,7 +214,7 @@ function run() {
                 });
             });
             // Run the main script on the modified container
-            const mainOutput = yield runContainerScript(container, scriptToExecute);
+            const mainOutput = yield (0, container_1.runContainerScript)(container, scriptToExecute);
             core.info('Main script output:');
             core.info(mainOutput);
             // Perform assertions on the output as needed
