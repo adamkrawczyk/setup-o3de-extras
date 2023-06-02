@@ -19,7 +19,8 @@ export async function runContainerScript(imageName: string, scriptToExecute: str
     await new Promise<void>((resolve, reject) => {
       rm(tempFilePath, { recursive: true }, (err) => {
         if (err) {
-          // do nothing
+          // break the promise chain if there is an error
+          reject(err);
         }
         resolve();
       });

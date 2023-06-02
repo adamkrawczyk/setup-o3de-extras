@@ -36,7 +36,8 @@ function runContainerScript(imageName, scriptToExecute) {
             yield new Promise((resolve, reject) => {
                 (0, fs_1.rm)(tempFilePath, { recursive: true }, (err) => {
                     if (err) {
-                        // do nothing
+                        // break the promise chain if there is an error
+                        reject(err);
                     }
                     resolve();
                 });
@@ -135,19 +136,23 @@ exports.checkIfFile = checkIfFile;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.writeToFile = void 0;
-const fs_1 = __nccwpck_require__(147);
+const child_process_1 = __nccwpck_require__(81);
 function writeToFile(filePath, data) {
+    // return new Promise<void>((resolve, reject) => {
+    //   writeFile(filePath, data, (err) => {
+    //     if (err) {
+    //       console.error(`Failed to write to file: ${filePath}`);
+    //       reject(err);
+    //     } else {
+    //       console.log(`File written successfully: ${filePath}`);
+    //       resolve();
+    //     }
+    //   });
+    // });
     return new Promise((resolve, reject) => {
-        (0, fs_1.writeFile)(filePath, data, (err) => {
-            if (err) {
-                console.error(`Failed to write to file: ${filePath}`);
-                reject(err);
-            }
-            else {
-                console.log(`File written successfully: ${filePath}`);
-                resolve();
-            }
-        });
+        const command = `echo "${data}" > ${filePath}`;
+        const output = (0, child_process_1.execSync)(command).toString();
+        resolve();
     });
 }
 exports.writeToFile = writeToFile;
@@ -196,8 +201,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const fs_1 = __nccwpck_require__(147);
 const container_1 = __nccwpck_require__(499);
-// import { checkIfFile } from './file';
-// import { writeToFile } from './io';
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
