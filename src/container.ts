@@ -2,6 +2,8 @@ import { execSync, spawnSync } from 'child_process';
 import { writeToFile } from './io';
 import { checkIfFile } from './file';
 import { mkdir, rm } from 'fs';
+import rimraf from 'rimraf';
+import { resolve } from 'path';
 
 export async function runContainerScript(imageName: string, scriptToExecute: string): Promise<string> {
   // Write the script to a temporary file
@@ -17,10 +19,7 @@ export async function runContainerScript(imageName: string, scriptToExecute: str
   try {
 
     // remove using rimraf
-    const rimraf = require('rimraf');
-    await new Promise<void>((resolve, reject) => {
-      rimraf(tempFilePath) 
-    });
+    await new Promise(resolve => rimraf(tempFilePath, resolve as any));
 
     // create the directory
     await new Promise<void>((resolve, reject) => {
