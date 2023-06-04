@@ -1,35 +1,38 @@
 import * as core from '@actions/core';
 import { execSync } from 'child_process';
 import { readFile, writeFile, rm, mkdir } from 'fs';
-import {expect, test} from '@jest/globals'
+import { expect, test } from '@jest/globals'
+import rimraf from 'rimraf';
+import { existsSync } from 'fs';
+import { removeDirectorySync } from '../src/io';
 
 function runContainerScript(imageName: string, scriptToExecute: string): string {
   // Write the script to a temporary file
+  const os = require('os');
+  const path = require('path');
+
   const tempFilePath = '/tmp/ci_testing/';
   const tempFileName = 'script.sh';
-  const tempFileFullPath = tempFilePath + tempFileName;
+  const tempFileFullPath = path.join(tempFilePath, tempFileName);
+  const containerScriptsPath = path.join(os.tmpdir(), 'scripts');
+  const containerScriptFullPath = path.join(containerScriptsPath, tempFileName);
+  
+  removeDirectorySync(tempFilePath);
 
-  // try to remove the file asynchronously
-  rm(tempFilePath, { recursive: true }, (err) => {
+  // create the directory
+  mkdir(tempFilePath, { recursive: true }, (err) => {
     if (err) {
-      // do nothing
+      console.error(`Failed to create directory: ${tempFilePath}`);
+      throw err;
     }
 
-    // create the directory
-    mkdir(tempFilePath, { recursive: true }, (err) => {
+    // write the file to the temp file
+    writeFile(tempFileFullPath, scriptToExecute.toString(), (err) => {
       if (err) {
-        console.error(`Failed to create directory: ${tempFilePath}`);
+        console.error(`Failed to write to file: ${tempFileFullPath}`);
         throw err;
       }
-
-      // write the file to the temp file
-      writeFile(tempFileFullPath, scriptToExecute.toString(), (err) => {
-        if (err) {
-          console.error(`Failed to write to file: ${tempFileFullPath}`);
-          throw err;
-        }
-        console.log(`File written successfully: ${tempFileFullPath}`);
-      });
+      // console.log(`File written successfully: ${tempFileFullPath}`);
     });
   });
 
@@ -50,12 +53,15 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
   if (folderName === 'o3de-extras') {
     console.log('o3de-extras detected');
     // if it is o3de-extras, then we need to mount the workspace
-    command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../o3de-extras:/data/workspace/o3de-extras ${imageName} /bin/bash ${tempFileFullPath}`;
+    command = `docker run --rm -v ${tempFilePath}:${containerScriptsPath} -v ${repoName}:/data/workspace/o3de-extras --workdir /data/workspace/o3de-extras ${imageName} /bin/bash ${containerScriptFullPath}`;
   }
   else {
     console.log(`running on a general purpose repo: ${folderName}`);
-    command = `docker run --rm -v ${tempFileFullPath}:${tempFileFullPath} -v $(pwd)/../${folderName}:/data/workspace/repository ${imageName} /bin/bash ${tempFileFullPath}`;
+    command = `docker run --rm -v ${tempFilePath}:${containerScriptsPath} -v ${repoName}:/data/workspace/repository --workdir /data/workspace/repository ${imageName} /bin/bash ${containerScriptFullPath}`;
   }
+
+  // command remove any new line characters
+  command = command.replace('\n', '');
 
   // debug print the command
   console.log(`command: ${command}`);
@@ -64,6 +70,26 @@ function runContainerScript(imageName: string, scriptToExecute: string): string 
 
   return output;
 }
+
+test('Remove Temp File Test', () => {
+  const tempFilePath = '/tmp/ci-test/';
+
+  // Create the directory
+  mkdir(tempFilePath, { recursive: true }, (err) => {
+    if (err) {
+      console.error(`Failed to create directory: ${tempFilePath}`);
+      throw err;
+    }
+  });
+
+  // Remove directory and wait for it to finish
+  removeDirectorySync(tempFilePath);
+
+  // Check if the directory exists
+  const fileExists = existsSync(tempFilePath);
+  expect(fileExists).toBe(false);
+});
+
 
 test('Docker Test', () => {
   let mainOutput = '';

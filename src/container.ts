@@ -2,7 +2,7 @@ import { execSync, spawnSync } from 'child_process';
 import { writeToFile } from './io';
 import { checkIfFile } from './file';
 import { mkdir, rm } from 'fs';
-import rimraf from 'rimraf';
+import { removeDirectorySync } from './io';
 import { resolve } from 'path';
 
 export async function runContainerScript(imageName: string, scriptToExecute: string): Promise<string> {
@@ -18,8 +18,7 @@ export async function runContainerScript(imageName: string, scriptToExecute: str
 
   try {
 
-    // remove using rimraf
-    await new Promise(resolve => rimraf(tempFilePath, resolve as any));
+    removeDirectorySync(tempFilePath);
 
     // create the directory
     await new Promise<void>((resolve, reject) => {
@@ -62,6 +61,9 @@ export async function runContainerScript(imageName: string, scriptToExecute: str
         console.log(`Running on a general-purpose repo: ${repoPath}`);
         command = `docker run --rm -v ${tempFilePath}:${containerScriptsPath} -v ${repoPath}:/data/workspace/repository --workdir /data/workspace/repository ${imageName} /bin/bash ${containerScriptFullPath}`;
       }
+
+      // remove any new line characters
+      command = command.replace('\n', '');
 
       // Execute the Docker command using spawnSync
       const result = spawnSync('sh', ['-c', command]);

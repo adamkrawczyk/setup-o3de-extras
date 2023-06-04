@@ -15,16 +15,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.runContainerScript = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 const io_1 = __nccwpck_require__(1915);
 const file_1 = __nccwpck_require__(4014);
 const fs_1 = __nccwpck_require__(7147);
-const rimraf_1 = __importDefault(__nccwpck_require__(784));
+const io_2 = __nccwpck_require__(1915);
 function runContainerScript(imageName, scriptToExecute) {
     return __awaiter(this, void 0, void 0, function* () {
         // Write the script to a temporary file
@@ -36,8 +33,7 @@ function runContainerScript(imageName, scriptToExecute) {
         const containerScriptsPath = path.join(os.tmpdir(), 'scripts');
         const containerScriptFullPath = path.join(containerScriptsPath, tempFileName);
         try {
-            // remove using rimraf
-            yield new Promise(resolve => (0, rimraf_1.default)(tempFilePath, resolve));
+            (0, io_2.removeDirectorySync)(tempFilePath);
             // create the directory
             yield new Promise((resolve, reject) => {
                 (0, fs_1.mkdir)(tempFilePath, { recursive: true }, (err) => {
@@ -78,6 +74,8 @@ function runContainerScript(imageName, scriptToExecute) {
                     console.log(`Running on a general-purpose repo: ${repoPath}`);
                     command = `docker run --rm -v ${tempFilePath}:${containerScriptsPath} -v ${repoPath}:/data/workspace/repository --workdir /data/workspace/repository ${imageName} /bin/bash ${containerScriptFullPath}`;
                 }
+                // remove any new line characters
+                command = command.replace('\n', '');
                 // Execute the Docker command using spawnSync
                 const result = (0, child_process_1.spawnSync)('sh', ['-c', command]);
                 if (result.error) {
@@ -126,25 +124,18 @@ exports.checkIfFile = checkIfFile;
 /***/ }),
 
 /***/ 1915:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.writeToFile = void 0;
+exports.removeDirectorySync = exports.removeDirectory = exports.writeToFile = void 0;
 const child_process_1 = __nccwpck_require__(2081);
+const rimraf_1 = __importDefault(__nccwpck_require__(784));
 function writeToFile(filePath, data) {
-    // return new Promise<void>((resolve, reject) => {
-    //   writeFile(filePath, data, (err) => {
-    //     if (err) {
-    //       console.error(`Failed to write to file: ${filePath}`);
-    //       reject(err);
-    //     } else {
-    //       console.log(`File written successfully: ${filePath}`);
-    //       resolve();
-    //     }
-    //   });
-    // });
     return new Promise((resolve, reject) => {
         const command = `echo "${data}" > ${filePath}`;
         const output = (0, child_process_1.execSync)(command).toString();
@@ -152,6 +143,18 @@ function writeToFile(filePath, data) {
     });
 }
 exports.writeToFile = writeToFile;
+function removeDirectory(directoryPath) {
+    return new Promise((resolve, reject) => {
+        (0, rimraf_1.default)(directoryPath, { preserveRoot: false });
+        resolve();
+    });
+}
+exports.removeDirectory = removeDirectory;
+// Sync version of removeDirectory
+function removeDirectorySync(directoryPath) {
+    rimraf_1.default.sync(directoryPath, { preserveRoot: false });
+}
+exports.removeDirectorySync = removeDirectorySync;
 
 
 /***/ }),
