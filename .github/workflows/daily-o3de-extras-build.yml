@@ -19,7 +19,7 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
     - name: Build and push Docker image
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v7
       with:
         file: ./docker/o3de-extras-daily/Dockerfile
         push: true
